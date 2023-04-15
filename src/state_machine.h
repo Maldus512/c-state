@@ -3,10 +3,10 @@
 
 
 #define STATE_MACHINE_DECLARE(name, event_t)                                                                           \
-    int name##_send_event(name##_state_machine_t *sm, void *user_ptr, event_t event);
+    uint8_t name##_send_event(name##_state_machine_t *sm, void *user_ptr, event_t event);
 
 #define STATE_MACHINE_DEFINE(name, event_t)                                                                            \
-    typedef int (*name##_event_manager_t)(void *, event_t);                                                            \
+    typedef int (*name##_event_manager_t)(state_t *, event_t, void *);                                                 \
     typedef struct {                                                                                                   \
         name##_event_manager_t event;                                                                                  \
         void (*entry)(void *);                                                                                         \
@@ -14,19 +14,19 @@
     } name##_state_manager_t;                                                                                          \
     typedef struct {                                                                                                   \
         name##_state_manager_t *managers;                                                                              \
-        unsigned int            state;                                                                                 \
+        unsigned int            state_index;                                                                           \
     } name##_state_machine_t;                                                                                          \
                                                                                                                        \
     int name##_send_event(name##_state_machine_t *sm, void *user_ptr, event_t event) {                                 \
-        int res = sm->managers[sm->state].event(user_ptr, event);                                                      \
+        int res = sm->managers[sm->state_index].event(user_ptr, event);                                                \
                                                                                                                        \
         if (res >= 0) {                                                                                                \
-            if (sm->managers[sm->state].exit != NULL) {                                                                \
-                sm->managers[sm->state].exit(user_ptr);                                                                \
+            if (sm->managers[sm->state_index].exit != NULL) {                                                          \
+                sm->managers[sm->state_index].exit(user_ptr);                                                          \
             }                                                                                                          \
-            sm->state = res;                                                                                           \
-            if (sm->managers[sm->state].entry != NULL) {                                                               \
-                sm->managers[sm->state].entry(user_ptr);                                                               \
+            sm->state_index = (unsigned int)res;                                                                       \
+            if (sm->managers[sm->state_index].entry != NULL) {                                                         \
+                sm->managers[sm->state_index].entry(user_ptr);                                                         \
             }                                                                                                          \
             return 1;                                                                                                  \
         }                                                                                                              \
