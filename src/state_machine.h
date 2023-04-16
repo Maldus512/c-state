@@ -6,27 +6,27 @@
     uint8_t name##_send_event(name##_state_machine_t *sm, void *user_ptr, event_t event);
 
 #define STATE_MACHINE_DEFINE(name, event_t)                                                                            \
-    typedef int (*name##_event_manager_t)(state_t *, event_t, void *);                                                 \
+    typedef int (*name##_event_manager_t)(event_t, void *);                                                            \
     typedef struct {                                                                                                   \
         name##_event_manager_t event;                                                                                  \
         void (*entry)(void *);                                                                                         \
         void (*exit)(void *);                                                                                          \
-    } name##_state_manager_t;                                                                                          \
+    } name##_node_t;                                                                                                   \
     typedef struct {                                                                                                   \
-        name##_state_manager_t *managers;                                                                              \
-        unsigned int            state_index;                                                                           \
+        name##_node_t *nodes;                                                                                          \
+        unsigned int   node_index;                                                                                     \
     } name##_state_machine_t;                                                                                          \
                                                                                                                        \
     int name##_send_event(name##_state_machine_t *sm, void *user_ptr, event_t event) {                                 \
-        int res = sm->managers[sm->state_index].event(user_ptr, event);                                                \
+        int res = sm->nodes[sm->node_index].event(event, user_ptr);                                                    \
                                                                                                                        \
         if (res >= 0) {                                                                                                \
-            if (sm->managers[sm->state_index].exit != NULL) {                                                          \
-                sm->managers[sm->state_index].exit(user_ptr);                                                          \
+            if (sm->nodes[sm->node_index].exit != NULL) {                                                              \
+                sm->nodes[sm->node_index].exit(user_ptr);                                                              \
             }                                                                                                          \
-            sm->state_index = (unsigned int)res;                                                                       \
-            if (sm->managers[sm->state_index].entry != NULL) {                                                         \
-                sm->managers[sm->state_index].entry(user_ptr);                                                         \
+            sm->node_index = (unsigned int)res;                                                                        \
+            if (sm->nodes[sm->node_index].entry != NULL) {                                                             \
+                sm->nodes[sm->node_index].entry(user_ptr);                                                             \
             }                                                                                                          \
             return 1;                                                                                                  \
         }                                                                                                              \
