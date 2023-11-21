@@ -3,9 +3,6 @@
 
 
 #define STATE_MACHINE_DECLARE(name, event_t)                                                                           \
-    uint8_t name##_send_event(name##_state_machine_t *sm, void *user_ptr, event_t event);
-
-#define STATE_MACHINE_DEFINE(name, event_t)                                                                            \
     typedef int (*name##_event_manager_t)(event_t, void *);                                                            \
     typedef struct {                                                                                                   \
         name##_event_manager_t event;                                                                                  \
@@ -14,10 +11,12 @@
     } name##_node_t;                                                                                                   \
     typedef struct {                                                                                                   \
         name##_node_t *nodes;                                                                                          \
-        unsigned int   node_index;                                                                                     \
+        size_t         node_index;                                                                                     \
     } name##_state_machine_t;                                                                                          \
-                                                                                                                       \
-    int name##_send_event(name##_state_machine_t *sm, void *user_ptr, event_t event) {                                 \
+
+
+#define STATE_MACHINE_DEFINE(name, event_t)                                                                            \
+    uint8_t name##_send_event(name##_state_machine_t *sm, void *user_ptr, event_t event) {                                 \
         int res = sm->nodes[sm->node_index].event(event, user_ptr);                                                    \
                                                                                                                        \
         if (res >= 0) {                                                                                                \
@@ -32,6 +31,10 @@
         }                                                                                                              \
         return 0;                                                                                                      \
     }
+
+#define STATE_MACHINE_INTERNAL(name, event_t)                                                                          \
+    STATE_MACHINE_DECLARE(name, event_t);                                                                              \
+    STATE_MACHINE_DEFINE(name, event_t);
 
 #define STATE_MACHINE_EVENT_MANAGER(event_manager)                                                                     \
     { .event = event_manager, .entry = NULL, .exit = NULL }
